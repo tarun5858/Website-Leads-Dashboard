@@ -1,0 +1,11 @@
+# .gitignore
+
+# Dependencies
+/node_modules
+
+# Environment variables (MUST be kept secret)
+.env
+
+# Logs and OS files
+npm-debug.log*
+.DS_Store

@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lead Dashboard (Admin View)</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background-color: #f4f4f4; }
+        .container { max-width: 1200px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        h1 { color: #007bff; text-align: center; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; cursor: pointer; }
+        .error { color: red; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Website Leads Dashboard</h1>
+        <p id="status">Loading leads data...</p>
+        <table id="leadsTable">
+            <thead>
+                </thead>
+            <tbody>
+                </tbody>
+        </table>
+    </div>
+
+    <script>
+    // --- VARIABLES ---
+    const ADMIN_KEY = 'prehome@321'; 
+    // const API_URL = `/api/leads?key=${ADMIN_KEY}`; // Correctly uses the key
+    const API_URL = `http://localhost:5000/api/leads?key=${ADMIN_KEY}`;
+    const tableBody = document.getElementById('leadsTable').querySelector('tbody');
+    const tableHead = document.getElementById('leadsTable').querySelector('thead');
+    const statusElement = document.getElementById('status');
+
+    const FIELD_LABELS = {
+        // You can uncomment '_id' if you want to see the MongoDB ID
+        // '_id': 'ID',
+        'name': 'Name',
+        'email': 'Email',
+        'phone': 'Phone',
+        'selectedLocation': 'Location',
+        'selectedLayout': 'Layout',
+        'createdAt': 'Date'
+    };
+
+    // --- FUNCTION TO FETCH AND RENDER LEADS ---
+    async function fetchAndRenderLeads() {
+        try {
+            // Fetch from the correct, secured URL
+            const response = await fetch(API_URL); 
+
+            // Check if the status is NOT 200 (OK)
+            if (!response.ok) {
+                statusElement.className = 'error';
+                
+                // Try to parse the JSON error message from the server (e.g., 403 Access Denied)
+                const errorData = await response.json().catch(() => ({ message: 'Server did not return valid JSON.' }));
+                
+                if (response.status === 403) {
+                    statusElement.textContent = `Error 403: Access Denied. Check your ADMIN_KEY in the HTML and .env file.`;
+                } else {
+                    statusElement.textContent = `Error ${response.status}: ${errorData.message || 'Failed to retrieve data.'}`;
+                }
+                return; 
+            }
+
+            // If response.ok is true, parse the data
+            const data = await response.json();
+
+            if (data.success) { 
+                const leads = data.leads;
+                
+                if (leads.length === 0) {
+                    statusElement.textContent = 'No leads found in the database.';
+                    return;
+                }
+
+                // 1. Get the fields to display
+                const fields = Object.keys(FIELD_LABELS);
+                
+                // 2. Create Table Headers
+                let headerRow = '<tr>';
+                fields.forEach(field => {
+                    headerRow += `<th>${FIELD_LABELS[field]}</th>`;
+                });
+                headerRow += '</tr>';
+                tableHead.innerHTML = headerRow;
+
+                // 3. Create Table Rows
+                let tableRows = '';
+                leads.forEach(lead => {
+                    tableRows += '<tr>';
+                    fields.forEach(field => {
+                        let value = lead[field] || ''; 
+                        
+                        // Simple formatting for date
+                        if (field === 'createdAt' && value) {
+                            value = new Date(value).toLocaleString();
+                        }
+                        
+                        // Truncate long IDs (Only needed if you include _id in FIELD_LABELS)
+                        if (field === '_id' && value.length > 10) {
+                             value = value.substring(0, 10) + '...';
+                        }
+                        
+                        tableRows += `<td>${value}</td>`;
+                    });
+                    tableRows += '</tr>';
+                });
+                
+                tableBody.innerHTML = tableRows;
+                statusElement.textContent = `Displaying ${leads.length} leads.`;
+
+            } else {
+                statusElement.className = 'error';
+                statusElement.textContent = `Error: ${data.message || 'Failed to process data.'}`;
+            }
+        } catch (error) {
+            statusElement.className = 'error';
+            statusElement.textContent = `A network error or parsing error occurred. Details: ${error.message}`;
+            console.error('Fetch error:', error);
+        }
+    }
+
+    // Run the function when the page loads
+    fetchAndRenderLeads();
+</script>
+</body>
+</html>
