@@ -30,7 +30,9 @@
     // --- VARIABLES ---
     const ADMIN_KEY = 'prehome@321'; 
     // const API_URL = `/api/leads?key=${ADMIN_KEY}`; // Correctly uses the key
-    const API_URL = `http://localhost:5000/api/leads?key=${ADMIN_KEY}`;
+    const RENDER_URL = 'https://website-leads-dashboard.onrender.com';
+    // const API_URL = `http://localhost:5000/api/leads?key=${ADMIN_KEY}`;
+    const API_URL = `${RENDER_URL}/api/leads?key=${ADMIN_KEY}`;
     const tableBody = document.getElementById('leadsTable').querySelector('tbody');
     const tableHead = document.getElementById('leadsTable').querySelector('thead');
     const statusElement = document.getElementById('status');
