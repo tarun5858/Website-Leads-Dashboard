@@ -4,6 +4,8 @@ import express from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 // Load environment variables from .env file
 dotenv.config(); 
@@ -28,13 +30,18 @@ mongoose.connect(mongoURI, {
 
 const app = express();
 
+// Helper to get directory name in ES Module scope
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 // --- Middleware ---
 app.use(cors()); // Allow cross-origin requests from your HTML site
 app.use(express.json()); // To parse application/json
 app.use(express.urlencoded({ extended: true })); // To parse form data (application/x-www-form-urlencoded)
 
 // Serve the static HTML/CSS files from the 'public' folder
-app.use(express.static('public')); 
+// app.use(express.static('public')); 
+app.use(express.static(path.join(__dirname, '..', 'public')));
 
 // ADD THIS HEALTH CHECK BACK (Good practice and might be needed)
 app.get('/health', (req, res) => {
